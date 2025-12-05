@@ -6,25 +6,39 @@ const AddUserData = async(req,res) =>{
          
         
         const GetEmail = await UserModel.findOne({Email:req.body.Email})
+        const GetGameID = await UserModel.findOne({GameID:req.body.GameID})
         
 
         console.log(" Email ",GetEmail)
         console.log(req.body.Email)
 
         if(GetEmail){
-           res.json({
+            res.status(400).json({
             Success:false,
             msg:"UserName Already Exist"
            })
+
+           return false
         }
-        else{
+
+        if(GetGameID){
+            res.status(400).json({
+            Success:false,
+            msg:"GameID Already Exist"
+           })
+
+           return false
+        }
+      
             const saltRounds = 10
             const hashedPassword = await bcrypt.hash(req.body.Password, saltRounds);
             console.log("hashedPassword",hashedPassword)
 
            const AddUser = await UserModel(
             {
+
                 Email:req.body.Email,
+                GameID:req.body.GameID,
                 MobileNumber:req.body.MobileNumber,
                 Password:hashedPassword,
 
@@ -34,7 +48,7 @@ const AddUserData = async(req,res) =>{
                 Success:true,
                 msg:"User SuccessFully Register"
                })
-        }
+        
 
     }
     catch(e){
@@ -57,6 +71,7 @@ const LoginUser =  async(req,res) =>{
                 res.json({
                     success:true,
                     Msg:"Login Successfull",
+                    GameID:user.GameID
                 })
             } else {
                 res.status(401).json({message:"invalid Email or password"})

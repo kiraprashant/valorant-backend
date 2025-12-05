@@ -8,6 +8,11 @@ const userSchema = new mongoose.Schema({
         required: [true, "Email is required"],
         trim: true,
     },
+    GameID: {
+        type: String,
+        required: [true, "GameID is required"],
+        trim: true,
+    },
     Password: {
         type: String,
         required: [true, "Password is required"],
