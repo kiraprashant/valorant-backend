@@ -15,7 +15,7 @@ const AddUserData = async(req,res) =>{
         if(GetEmail){
             res.status(400).json({
             Success:false,
-            msg:"UserName Already Exist"
+            msg:"Email Already Exist"
            })
 
            return false
@@ -29,6 +29,8 @@ const AddUserData = async(req,res) =>{
 
            return false
         }
+
+        
       
             const saltRounds = 10
             const hashedPassword = await bcrypt.hash(req.body.Password, saltRounds);
@@ -37,6 +39,7 @@ const AddUserData = async(req,res) =>{
            const AddUser = await UserModel(
             {
 
+                Name:req.body.Name,
                 Email:req.body.Email,
                 GameID:req.body.GameID,
                 MobileNumber:req.body.MobileNumber,
@@ -63,6 +66,7 @@ const AddUserData = async(req,res) =>{
 
 const LoginUser =  async(req,res) =>{
     try{
+        console.log(req.body)
         const user = await UserModel.findOne({Email:req.body.Email})
         console.log(user)
         if(user){
@@ -74,15 +78,89 @@ const LoginUser =  async(req,res) =>{
                     GameID:user.GameID
                 })
             } else {
-                res.status(401).json({message:"invalid Email or password"})
+                res.status(400).json({msg:"invalid Email or password"})
             }
         } else {
-            res.status(401).json({message:"User not found"})
+            res.status(400).json({msg:"User not found"})
         }
     }
     catch(e){
-        res.status(500).json({message:"Internal Server Error"})
+        res.status(500).json({msg:"Internal Server Error"})
     }
 }
 
-module.exports = {AddUserData,LoginUser}
+const GetSingleProfile =  async(req,res) =>{
+    try{
+        console.log(req.body)
+        const user = await UserModel.findOne({GameID:req.body.GameID}).select("-Password")
+
+        if(user){
+            res.json({
+                success:true,
+                Msg:"Profile Found",
+                Profile:user
+            })
+        }
+        else{
+            res.json({
+                success:false,
+                Msg:"Profile Not Found",            })
+        }
+    }
+    catch(e){
+      console.log()
+      res.status(500).json({msg:"Internal Server Error"})
+    }
+}
+
+const UpdateSingleProfile = async (req, res) => {
+    try {
+      const userId = req.body._id;   // /update/:id
+  
+      // Data coming from React
+      const data = {
+        Name: req.body.Name,
+        Email: req.body.Email,
+        GameID: req.body.GameID,
+        MobileNumber:req.body.MobileNumber,
+        Gender: req.body.Gender,
+        Date_of_Brith: req.body.Date_of_Brith,
+        Discord_ID: req.body.Discord_ID,
+        YouTube_Twitch_Link: req.body.YouTube_Twitch_Link,
+        Game_Rank: req.body.Game_Rank,
+        Role: req.body.Role,
+        Bio: req.body.Bio,
+      };
+
+      console.log(req.body.YouTube_Twitch_Link)
+  
+      // Find and update
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        { $set: data },
+        { new: true, runValidators: true, select: "-Password" }
+      );
+  
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          msg: "User not found",
+        });
+      }
+  
+      res.json({
+        success: true,
+        msg: "Profile updated successfully",
+        profile: updatedUser
+      });
+  
+    } catch (error) {
+      console.log("Error updating profile:", error);
+      res.status(500).json({
+        success: false,
+        msg: "Internal server error",
+      });
+    }
+  };
+
+module.exports = {AddUserData,LoginUser,GetSingleProfile,UpdateSingleProfile}

@@ -1,6 +1,7 @@
-const ParticapateModel = require("../Model/ParticapateModel");
+const TeamModel = require("../Model/ParticapateModel");
 const multer  = require('multer')
 const path = require("path")
+const mongoose = require("mongoose");
 
 
 const storage = multer.diskStorage({
@@ -26,7 +27,7 @@ const AddParticapateTeam = async (req, res) => {
     const leaderGameId = req.body.LeaderGameID;
 
     // 1️⃣ Check leader not already a leader
-    const AlreadyLeader = await ParticapateModel.findOne({ LeaderGameId: leaderGameId });
+    const AlreadyLeader = await TeamModel.findOne({ LeaderGameId: leaderGameId });
 
     if (AlreadyLeader) {
       return res.json({
@@ -36,7 +37,7 @@ const AddParticapateTeam = async (req, res) => {
     }
 
     // 2️⃣ Check leader not already a member
-    const LeaderIsMember = await ParticapateModel.findOne({ "Members.gameId": leaderGameId });
+    const LeaderIsMember = await TeamModel.findOne({ "Members.gameId": leaderGameId });
 
     if (LeaderIsMember) {
       return res.json({
@@ -49,7 +50,7 @@ const AddParticapateTeam = async (req, res) => {
     for (const member of Members) {
 
       // Check member not already a leader
-      const MemberIsLeader = await ParticapateModel.findOne({ LeaderGameId: member.gameId });
+      const MemberIsLeader = await TeamModel.findOne({ LeaderGameId: member.gameId });
 
       if (MemberIsLeader) {
         return res.json({
@@ -59,7 +60,7 @@ const AddParticapateTeam = async (req, res) => {
       }
 
       // Check member not already a member
-      const MemberAlreadyInTeam = await ParticapateModel.findOne({ "Members.gameId": member.gameId });
+      const MemberAlreadyInTeam = await TeamModel.findOne({ "Members.gameId": member.gameId });
 
       if (MemberAlreadyInTeam) {
         return res.json({
@@ -70,7 +71,7 @@ const AddParticapateTeam = async (req, res) => {
     }
 
     // 4️⃣ Passed All Validation — Save Team
-    const newTeam = await ParticapateModel({
+    const newTeam = await TeamModel({
       TeamName: req.body.teamName,
       LeaderName: req.body.name,
       LeaderGameId: req.body.LeaderGameID,
@@ -98,8 +99,8 @@ const CheckParticapateTeam = async (req, res) => {
 
   try{
     console.log("req.body" , req.body.GameID)
-    const GetGameLeaderID = await ParticapateModel.findOne({LeaderGameId:req.body.GameID})
-    const GetGameMemberID = await ParticapateModel.findOne({
+    const GetGameLeaderID = await TeamModel.findOne({LeaderGameId:req.body.GameID})
+    const GetGameMemberID = await TeamModel.findOne({
       "Members.gameId": req.body.GameID,
     });
 
@@ -109,8 +110,8 @@ const CheckParticapateTeam = async (req, res) => {
       res.json({
         success:true,
         msg:"He Is Leader",
-        LeaderGamerId:GetGameLeaderID,
-        GameId:req.body.GameID
+        GamerId:GetGameLeaderID,
+        GameTeam:req.body.GameID
     })
       return false
     }
@@ -119,8 +120,8 @@ const CheckParticapateTeam = async (req, res) => {
       res.json({
         success:true,
         msg:"He Is In Member",
-        LeaderGamerId:GetGameMemberID,
-        GameId:req.body.GameID
+        GamerId:GetGameMemberID,
+        GameTeam:req.body.GameID
     })
 
     }
@@ -129,8 +130,8 @@ const CheckParticapateTeam = async (req, res) => {
       res.json({
         success:true,
         msg:"Not in Any Team",
-        LeaderGamerId:GetGameLeaderID,
-        GameId:req.body.GameID
+        GamerId:GetGameLeaderID,
+        GameTeam:req.body.GameID
     })
     }
 
@@ -157,7 +158,7 @@ const UpdateParticapateTeam = async (req, res) => {
     const teamId = req.body.teamId; // ⬅ Comes during update
 
     // 1️⃣ Check leader not already a leader in another team
-    const AlreadyLeader = await ParticapateModel.findOne({ 
+    const AlreadyLeader = await TeamModel.findOne({ 
       LeaderGameId: leaderGameId,
       _id: { $ne: teamId } // Ignore own team if updating
     });
@@ -170,7 +171,7 @@ const UpdateParticapateTeam = async (req, res) => {
     }
 
     // 2️⃣ Check leader not already a member in another team
-    const LeaderIsMember = await ParticapateModel.findOne({
+    const LeaderIsMember = await TeamModel.findOne({
       "Members.gameId": leaderGameId,
       _id: { $ne: teamId }
     });
@@ -184,7 +185,7 @@ const UpdateParticapateTeam = async (req, res) => {
 
     // 3️⃣ Validate each member (ignore if same team)
     for (const member of Members) {
-      const MemberIsLeader = await ParticapateModel.findOne({
+      const MemberIsLeader = await TeamModel.findOne({
         LeaderGameId: member.gameId,
         _id: { $ne: teamId }
       });
@@ -196,7 +197,7 @@ const UpdateParticapateTeam = async (req, res) => {
         });
       }
 
-      const MemberAlreadyInTeam = await ParticapateModel.findOne({
+      const MemberAlreadyInTeam = await TeamModel.findOne({
         "Members.gameId": member.gameId,
         _id: { $ne: teamId }
       });
@@ -214,7 +215,7 @@ const UpdateParticapateTeam = async (req, res) => {
 
     if (teamId) {
       // UPDATE TEAM
-      newTeam = await ParticapateModel.findByIdAndUpdate(
+      newTeam = await TeamModel.findByIdAndUpdate(
         teamId,
         {
           TeamName: req.body.teamName,
@@ -242,4 +243,77 @@ const UpdateParticapateTeam = async (req, res) => {
   }
 };
 
-module.exports = { AddParticapateTeam, upload,CheckParticapateTeam ,UpdateParticapateTeam};
+const CheckingTeamByID = async (req,res) =>{
+  try {
+    const teamId = req.params.id;
+    console.log(teamId)
+
+    if (!mongoose.Types.ObjectId.isValid(teamId)) {
+      return res.status(200).json({
+        success: false,
+        msg: "Team Not Found"
+      });
+    }
+
+    const team = await TeamModel.findById(teamId);
+
+    if (!team) {
+      return res.status(200).json({
+        success: false,
+        msg: "Team not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      msg: "Team data found",
+      data: team
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      msg: "Something went wrong"
+    });
+  }
+}
+
+const DeletIngTeamByID = async (req,res) =>{
+  try {
+    const teamId = req.params.id;
+
+    // Validate ID
+    if (!mongoose.Types.ObjectId.isValid(teamId)) {
+      return res.status(200).json({
+        success: false,
+        msg: "Invalid Team ID format"
+      });
+    }
+
+    // Find and delete
+    const deletedTeam = await TeamModel.findByIdAndDelete(teamId);
+
+    if (!deletedTeam) {
+      return res.status(200).json({
+        success: false,
+        msg: "Team not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      msg: "Team deleted successfully",
+      deletedData: deletedTeam
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      msg: "Something went wrong"
+    });
+  }
+}
+
+module.exports = { AddParticapateTeam, upload,CheckParticapateTeam ,UpdateParticapateTeam,CheckingTeamByID,DeletIngTeamByID};

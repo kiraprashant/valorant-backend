@@ -20,6 +20,10 @@ const ContactSchema = new mongoose.Schema({
         type: String,
         required: [true, "Message is required"],
     },
+    Status: {
+        type: String,
+        default: "Pending"
+    },
     Created_At:{
         type:String,
         default:currentDate
