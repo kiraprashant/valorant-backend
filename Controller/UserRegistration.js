@@ -135,6 +135,33 @@ const UpdateSingleProfile = async (req, res) => {
       console.log(req.body.YouTube_Twitch_Link)
   
       // Find and update
+
+      const GamerID = await UserModel.findOne({ 
+        GameID: req.body.GameID,
+        _id: { $ne: userId } // Ignore own team if updating
+      });
+
+      const Email = await UserModel.findOne({ 
+        Email: req.body.Email,
+        _id: { $ne: userId } // Ignore own team if updating
+      });
+
+      if (Email) {
+        return res.json({
+          success: false,
+          msg: "This Email Already in use !"
+        });
+      }
+
+      if (GamerID) {
+        return res.json({
+          success: false,
+          msg: "This GameID Already in use !"
+        });
+      }
+
+
+
       const updatedUser = await UserModel.findByIdAndUpdate(
         userId,
         { $set: data },

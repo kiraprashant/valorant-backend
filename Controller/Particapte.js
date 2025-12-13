@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
     cb(null, "uploads/"); // folder name
   },
   filename: (req, file, cb) => {
-    const teamName = req.body.teamName || "team";
+    const teamName = req.body.TeamName || "team";
     // Replace spaces and special chars to make it file-system safe
     const safeTeamName = teamName.replace(/\s+/g, "_").replace(/[^\w_-]/g, "");
     const uniqueName = `${safeTeamName}_${Date.now()}${path.extname(file.originalname)}`;
@@ -23,6 +23,7 @@ const upload = multer({ storage });
 const AddParticapateTeam = async (req, res) => {
   try {
     const Members = JSON.parse(req.body.Members);
+    console.log("req.body.................///////////////.................",req.body)
 
     const leaderGameId = req.body.LeaderGameID;
 
@@ -72,10 +73,10 @@ const AddParticapateTeam = async (req, res) => {
 
     // 4️⃣ Passed All Validation — Save Team
     const newTeam = await TeamModel({
-      TeamName: req.body.teamName,
-      LeaderName: req.body.name,
-      LeaderGameId: req.body.LeaderGameID,
-      LeaderEmail: req.body.email,
+      TeamName: req.body.TeamName,
+      LeaderName: req.body.LeaderName,
+      LeaderGameId: req.body.LeaderGameId,
+      LeaderEmail: req.body.LeaderEmail,
       Members,
       TeamLogo: req.file ? `/uploads/${req.file.filename}` : null
     }).save();
@@ -153,8 +154,9 @@ const CheckParticapateTeam = async (req, res) => {
 const UpdateParticapateTeam = async (req, res) => {
   try {
     const Members = JSON.parse(req.body.Members);
+    console.log("req.body.................///////////////.................",req.body)
 
-    const leaderGameId = req.body.LeaderGameID;
+    const leaderGameId = req.body.LeaderGameId;
     const teamId = req.body.teamId; // ⬅ Comes during update
 
     // 1️⃣ Check leader not already a leader in another team
@@ -218,10 +220,10 @@ const UpdateParticapateTeam = async (req, res) => {
       newTeam = await TeamModel.findByIdAndUpdate(
         teamId,
         {
-          TeamName: req.body.teamName,
-          LeaderName: req.body.name,
-          LeaderGameId: req.body.LeaderGameID,
-          LeaderEmail: req.body.email,
+          TeamName: req.body.TeamName,
+          LeaderName: req.body.LeaderName,
+          LeaderGameId: req.body.LeaderGameId,
+          LeaderEmail: req.body.LeaderEmail,
           Members,
           TeamLogo: req.file ? `/uploads/${req.file.filename}` : req.body.existingTeamLogo
         },

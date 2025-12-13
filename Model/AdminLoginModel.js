@@ -3,7 +3,7 @@ const moment = require("moment")
 
 const currentDate = moment().format("DD-MM-YY");
 const AdminLogin = new mongoose.Schema({
-    Username: {
+    UserName: {
         type: String,
         required: [true, "UserName is required"],
         trim: true,
