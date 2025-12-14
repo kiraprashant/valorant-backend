@@ -69,7 +69,6 @@ const userSchema = new mongoose.Schema({
     Created_At:{
         type:String,
         default:currentDate,
-        default:""
     }
 });
 
